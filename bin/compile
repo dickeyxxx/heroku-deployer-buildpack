@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
+
+set -eo pipefail
+
+VENDOR_DIR="/app/.heroku/vendor"
+
+echo "-----> Installing binaries..."
+
+# Install fortran libraries
+if [ -d "$VENDOR_DIR" ]; then
+  echo "-----> Using cached binaries..."
+else
+  echo "-----> Downloading AWS Client...."
+  curl -O "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
+  mkdir -p $VENDOR_DIR
+  unzip awscli-bundle.zip
+  rm -f awscli-bundle.zip
+  echo "-----> Installing AWS Client...."
+  $(pwd)/awscli-bundle/install -i $VENDOR_DIR -b $VENDOR_DIR/aws -i $VENDOR_DIR/bin/aws
+fi
+
+echo "-----> I'm done, buddy."
