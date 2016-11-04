@@ -5,5 +5,5 @@ that are required for the deployer to function.
 
 ## Current executables
 * AWS
-* s3cmd
 * gnu tar
+* Heroku

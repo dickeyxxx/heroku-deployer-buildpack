@@ -11,13 +11,17 @@ echo "-----> Installing binaries..."
 if [ -d "$VENDOR_DIR" ]; then
   echo "-----> Using cached binaries..."
 else
-  echo "-----> Downloading AWS Client...."
+  echo "-----> Installing AWS Client...."
   curl -O "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
   mkdir -p $VENDOR_DIR
   unzip awscli-bundle.zip
   rm -f awscli-bundle.zip
-  echo "-----> Installing AWS Client...."
   $(pwd)/awscli-bundle/install -i $VENDOR_DIR -b $VENDOR_DIR/aws -i $VENDOR_DIR/bin/aws
+
+  echo "-----> Installing Heroku Client...."
+  curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
+  mv heroku-client $VENDOR_DIR/bin/heroku-client
+  ln -s /app/.heroku/vendor/bin/heroku-client/bin/heroku /app/.heroku/vendor/heroku
 fi
 
 echo "-----> I'm done, buddy."
