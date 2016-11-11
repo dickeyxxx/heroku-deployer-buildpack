@@ -3,30 +3,37 @@
 
 set -eo pipefail
 
-VENDOR_DIR="/app/.heroku/vendor"
+BUILD_DIR=$1
+VENDOR_DIR="$BUILD_DIR/vendor/deployer"
 
-echo "-----> Installing binaries..."
+mkdir -p $VENDOR_DIR
 
-# Install fortran libraries
-if [ -d "$VENDOR_DIR" ]; then
-  echo "-----> Using cached binaries..."
-else
-  echo "-----> Installing AWS Client...."
-  curl -O "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
-  mkdir -p $VENDOR_DIR
-  unzip awscli-bundle.zip
-  rm -f awscli-bundle.zip
-  $(pwd)/awscli-bundle/install -i $VENDOR_DIR -b $VENDOR_DIR/aws -i $VENDOR_DIR/bin/aws
+AWS_CLI_DIR="$VENDOR_DIR/aws-cli"
 
-  echo "-----> Installing Heroku Client...."
-  curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
-  mv heroku-client $VENDOR_DIR/bin/heroku-client
-  ln -s /app/.heroku/vendor/bin/heroku-client/bin/heroku /app/.heroku/vendor/heroku
+echo "-----> Installing AWS Client...."
+mkdir -p $AWS_CLI_DIR
+curl -O "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
+unzip awscli-bundle.zip
+rm -f awscli-bundle.zip
+awscli-bundle/install -i $AWS_CLI_DIR -b $AWS_CLI_DIR/aws -i $AWS_CLI_DIR/bin/aws
 
-  echo "-----> Installing go...."
-  curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
-  mv go $VENDOR_DIR/bin/go
-  ln -s /app/.heroku/vendor/bin/go/bin/go /app/.heroku/vendor/go
-fi
+HEROKU_CLI_DIR="$VENDOR_DIR/heroku-client"
+
+echo "-----> Installing Heroku Client...."
+mkdir -p $HEROKU_CLI_DIR
+curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
+mv heroku-client $HEROKU_CLI_DIR
+
+GO_DIR="$VENDOR_DIR/go"
+
+echo "-----> Installing go...."
+mkdir -p $GO_DIR
+curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
+mv go $GO_DIR
+
+mkdir -p "$BUILD_DIR"/.profile.d
+cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
+export PATH=$PATH:/app/vendor/deployer/heroku-client/bin/heroku:/app/vendor/deployer/go/bin/go:/app/vendor/deployer/aws-cli/bin/aws"
+EOF
 
 echo "-----> I'm done, buddy."
