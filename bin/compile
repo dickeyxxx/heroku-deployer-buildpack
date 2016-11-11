@@ -22,6 +22,11 @@ else
   curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
   mv heroku-client $VENDOR_DIR/bin/heroku-client
   ln -s /app/.heroku/vendor/bin/heroku-client/bin/heroku /app/.heroku/vendor/heroku
+
+  echo "-----> Installing go...."
+  curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
+  mv go $VENDOR_DIR/bin/go
+  ln -s /app/.heroku/vendor/bin/go/bin/go /app/.heroku/vendor/go
 fi
 
 echo "-----> I'm done, buddy."
