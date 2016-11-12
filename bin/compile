@@ -8,19 +8,13 @@ VENDOR_DIR="$BUILD_DIR/vendor/deployer"
 
 mkdir -p $VENDOR_DIR
 
-HEROKU_CLI_DIR="$VENDOR_DIR/heroku-client"
-
 echo "-----> Installing Heroku Client...."
-mkdir -p $HEROKU_CLI_DIR
 curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
-mv heroku-client $HEROKU_CLI_DIR
-
-GO_DIR="$VENDOR_DIR/go"
+mv heroku-client $VENDOR_DIR
 
 echo "-----> Installing go...."
-mkdir -p $GO_DIR
 curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
-mv go $GO_DIR
+mv go $VENDOR_DIR
 
 mkdir -p "$BUILD_DIR"/.profile.d
 cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
