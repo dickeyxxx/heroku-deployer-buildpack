@@ -8,15 +8,6 @@ VENDOR_DIR="$BUILD_DIR/vendor/deployer"
 
 mkdir -p $VENDOR_DIR
 
-AWS_CLI_DIR="$VENDOR_DIR/aws-cli"
-
-echo "-----> Installing AWS Client...."
-mkdir -p $AWS_CLI_DIR
-curl -O "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
-unzip awscli-bundle.zip
-rm -f awscli-bundle.zip
-awscli-bundle/install -i $AWS_CLI_DIR -b $AWS_CLI_DIR/aws -i $AWS_CLI_DIR/bin/aws
-
 HEROKU_CLI_DIR="$VENDOR_DIR/heroku-client"
 
 echo "-----> Installing Heroku Client...."
@@ -33,7 +24,7 @@ mv go $GO_DIR
 
 mkdir -p "$BUILD_DIR"/.profile.d
 cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
-export PATH=$PATH:/app/vendor/deployer/heroku-client/bin/heroku:/app/vendor/deployer/go/bin/go:/app/vendor/deployer/aws-cli/bin/aws"
+export PATH=$PATH:/app/vendor/deployer/heroku-client/bin/heroku:/app/vendor/deployer/go/bin/go"
 EOF
 
 echo "-----> I'm done, buddy."
