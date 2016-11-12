@@ -18,7 +18,8 @@ mv go $VENDOR_DIR
 
 mkdir -p "$BUILD_DIR"/.profile.d
 cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
-export PATH=$PATH:/app/vendor/deployer/heroku-client/bin/heroku:/app/vendor/deployer/go/bin/go
+export PATH=/app/vendor/deployer/heroku-client/bin:/app/vendor/deployer/go/bin:$PATH
+export GOROOT=/app/vendor/deployer/go
 EOF
 
 echo "-----> I'm done, buddy."
