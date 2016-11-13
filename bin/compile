@@ -3,11 +3,17 @@
 
 set -eo pipefail
 
+# Clean up leaking environment
+unset GIT_DIR
+
 BUILD_DIR=$1
 VENDOR_DIR="$BUILD_DIR/vendor/deployer"
+BIN_DIR="$BUILD_DIR/vendor/bin"
 
 mkdir -p $VENDOR_DIR
+mkdir -p $BIN_DIR
 
+# Required dependencies for the deployer itself
 echo "-----> Installing Heroku Client...."
 curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
 mv heroku-client $VENDOR_DIR
@@ -16,24 +22,24 @@ echo "-----> Installing go...."
 curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
 mv go $VENDOR_DIR
 
-export PATH=$VENDOR_DIR/go/bin:$PATH
-export GOROOT=$VENDOR_DIR/go
-export GOPATH=$VENDOR_DIR/go-deps
+
+# Required dependencies for themuse (may need to move this somewhere else later)
 mkdir -p $VENDOR_DIR/go-deps
 
-go get github.com/dullgiulio/pingo
-pushd $GOPATH/src/github.com/dullgiulio/pingo
-make
-popd
+export GOROOT=$VENDOR_DIR/go
+export GOPATH=$VENDOR_DIR/go-deps
+export PATH=$GOROOT/bin:$PATH
+
+wget https://s3.amazonaws.com/tm-vendor/sassc
+mv sassc $BIN_DIR
+chmod +x $BIN_DIR/sassc
 
 go get github.com/dailymuse/gosass
-pushd $GOPATH/src/github.com/dailymuse/gosass
-make install
-popd
 
+# Update environment variables that are sourced at dyno startup
 mkdir -p "$BUILD_DIR"/.profile.d
 cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
-export PATH=/app/vendor/deployer/heroku-client/bin:/app/vendor/deployer/go/bin:$PATH
+export PATH=/app/vendor/bin:/app/vendor/deployer/heroku-client/bin:/app/vendor/deployer/go/bin:/app/vendor/deployer/go-deps/bin:$PATH
 export GOROOT=/app/vendor/deployer/go
 export GOPATH=/app/vendor/deployer/go-deps
 EOF
