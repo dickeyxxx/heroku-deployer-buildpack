@@ -7,21 +7,43 @@ set -eo pipefail
 unset GIT_DIR
 
 BUILD_DIR=$1
+CACHE_DIR=$2
 VENDOR_DIR="$BUILD_DIR/vendor/deployer"
 BIN_DIR="$BUILD_DIR/vendor/bin"
 
 mkdir -p $VENDOR_DIR
+mkdir -p $CACHE_DIR
 mkdir -p $BIN_DIR
 
 # Required dependencies for the deployer itself
-echo "-----> Installing Heroku Client...."
-curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
-mv heroku-client $VENDOR_DIR
 
-echo "-----> Installing go...."
-curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
-mv go $VENDOR_DIR
+if [ -d "$CACHE_DIR/heroku-client" ]; then
+  echo "-----> Using cached Heroku Client."
+else
+  echo "-----> Installing Heroku Client...."
+  curl -s https://s3.amazonaws.com/assets.heroku.com/heroku-client/heroku-client.tgz | tar xz
+  mv heroku-client $CACHE_DIR
+fi
+cp -R $CACHE_DIR/heroku-client $VENDOR_DIR
 
+if [ -d "$CACHE_DIR/go" ]; then
+  echo "-----> Using cached go installation."
+else
+  echo "-----> Installing go...."
+  curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
+  mv go $CACHE_DIR
+fi
+cp -R $CACHE_DIR/go $VENDOR_DIR
+
+if [ -f "$CACHE_DIR/sassc" ]; then
+  echo "-----> Using cached sassc binary."
+else
+  echo "-----> Installing sassc...."
+  wget https://s3.amazonaws.com/tm-vendor/sassc
+  mv sassc $CACHE_DIR
+  chmod +x $CACHE_DIR/sassc
+fi
+cp $CACHE_DIR/sassc $BIN_DIR/sassc
 
 # Required dependencies for themuse (may need to move this somewhere else later)
 mkdir -p $VENDOR_DIR/go-deps
@@ -30,15 +52,20 @@ export GOROOT=$VENDOR_DIR/go
 export GOPATH=$VENDOR_DIR/go-deps
 export PATH=$GOROOT/bin:$PATH
 
-wget https://s3.amazonaws.com/tm-vendor/sassc
-mv sassc $BIN_DIR
-chmod +x $BIN_DIR/sassc
+if [ -d "$CACHE_DIR/go-deps" ]; then
+  echo "-----> Using cached go dependencies."
+  cp -R $CACHE_DIR/go-deps $VENDOR_DIR
+else
+  echo "-----> Installing gosass...."
+  go get github.com/dailymuse/gosass
+  cp -R $VENDOR_DIR/go-deps $CACHE_DIR
+fi
 
-go get github.com/dailymuse/gosass
 
 # Add python 2 wrapper so older library compiles work
-printf '#!/usr/bin/env bash\n\nPYTHONHOME=/usr\n\n/usr/bin/python2.7 "$@"' | tee $BIN_DIR/python2.7 $BIN_DIR/python2
+printf '#!/usr/bin/env bash\n\nPYTHONHOME=/usr\n\n/usr/bin/python2.7 "$@"\n' | tee $BIN_DIR/python2.7 $BIN_DIR/python2
 chmod +x $BIN_DIR/python2.7 $BIN_DIR/python2
+
 
 # Update environment variables that are sourced at dyno startup
 mkdir -p "$BUILD_DIR"/.profile.d
