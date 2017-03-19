@@ -66,13 +66,19 @@ fi
 printf '#!/usr/bin/env bash\n\nPYTHONHOME=/usr\n\n/usr/bin/python2.7 "$@"\n' | tee $BIN_DIR/python2.7 $BIN_DIR/python2
 chmod +x $BIN_DIR/python2.7 $BIN_DIR/python2
 
+# Ensure we have themuse-machine ssh key available at runtime
+
 
 # Update environment variables that are sourced at dyno startup
+# Also, we have themuse-machine ssh key available at runtime
 mkdir -p "$BUILD_DIR"/.profile.d
 cat <<EOF >"$BUILD_DIR"/.profile.d/deployer.sh
 export PATH=/app/vendor/bin:/app/vendor/deployer/heroku-client/bin:/app/vendor/deployer/go/bin:/app/vendor/deployer/go-deps/bin:$PATH
 export GOROOT=/app/vendor/deployer/go
 export GOPATH=/app/vendor/deployer/go-deps
+mkdir -p \$HOME/.ssh
+echo "\$SSH_KEY" > \$HOME/.ssh/id_rsa
+ssh -oStrictHostKeyChecking=no -T git@github.com 2>&1
 EOF
 
 echo "-----> I'm done, buddy."
