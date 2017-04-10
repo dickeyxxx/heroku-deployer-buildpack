@@ -8,6 +8,7 @@ unset GIT_DIR
 
 BUILD_DIR=$1
 CACHE_DIR=$2
+ENV_DIR=$3
 VENDOR_DIR="$BUILD_DIR/vendor/deployer"
 BIN_DIR="$BUILD_DIR/vendor/bin"
 
@@ -26,12 +27,18 @@ else
 fi
 cp -R $CACHE_DIR/heroku-client $VENDOR_DIR
 
-if [ -d "$CACHE_DIR/go" ]; then
+touch $CACHE_DIR/goversion
+EXISTING_GO_VERSION=$(cat $CACHE_DIR/goversion)
+REQUIRED_GO_VERSION=$(cat $ENV_DIR/GO_VERSION)
+
+if [ "$EXISTING_GO_VERSION" == "$REQUIRED_GO_VERSION" ]; then
   echo "-----> Using cached go installation."
 else
   echo "-----> Installing go...."
-  curl -s https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz | tar xz
+  rm -rf $CACHE_DIR/go $VENDOR_DIR/go
+  curl -s https://storage.googleapis.com/golang/go${REQUIRED_GO_VERSION}.linux-amd64.tar.gz | tar xz
   mv go $CACHE_DIR
+  echo "$REQUIRED_GO_VERSION" > $CACHE_DIR/goversion
 fi
 cp -R $CACHE_DIR/go $VENDOR_DIR
 
